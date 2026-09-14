@@ -20,7 +20,7 @@ namespace Contacts.Controllers
 
         [Route("[action]")]
         [Route("/")]
-        public IActionResult Index(string searchBy, string? searchString,
+        public async Task<IActionResult> Index(string searchBy, string? searchString,
                     string sortBy=nameof(PersonResponse.PersonName), 
                     SortOrderOptions sortOrder = SortOrderOptions.ASC
             )
@@ -36,12 +36,12 @@ namespace Contacts.Controllers
               };
 
             //Fileter
-            List<PersonResponse> persons = _personsService.GetFilteredPersons(searchBy, searchString);
+            List<PersonResponse> persons = await _personsService.GetFilteredPersons(searchBy, searchString);
             ViewBag.CurrentSearchBy = searchBy;
             ViewBag.CurrentSearchString = searchString;
 
             //Sort
-            List<PersonResponse> sortedPersons = _personsService.GetSortedPersons(persons, sortBy, sortOrder);
+            List<PersonResponse> sortedPersons = await _personsService.GetSortedPersons(persons, sortBy, sortOrder);
             ViewBag.CurrentSortBy = sortBy;
             ViewBag.CurrentSortOrder = sortOrder.ToString();
 
@@ -50,9 +50,9 @@ namespace Contacts.Controllers
 
         [Route("[action]")]
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            List<CountryResponse> countries = _countriesService.GetAllCountries();
+            List<CountryResponse> countries = await _countriesService.GetAllCountries();
 
             ViewBag.Countries = countries.Select(temp => new SelectListItem() 
             {
@@ -66,25 +66,25 @@ namespace Contacts.Controllers
 
         [Route("[action]")]
         [HttpPost]
-        public IActionResult Create(PersonAddRequest personAddRequest)
+        public async Task<IActionResult> Create(PersonAddRequest personAddRequest)
         {
             if(!ModelState.IsValid)
             {
-                List<CountryResponse> countries = _countriesService.GetAllCountries();
+                List<CountryResponse> countries = await _countriesService.GetAllCountries();
                 ViewBag.Countries = countries;
                 ViewBag.Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
 
                 return View();
             }
 
-            PersonResponse personResponse = _personsService.AddPerson(personAddRequest);
+            PersonResponse personResponse = await _personsService.AddPerson(personAddRequest);
             return RedirectToAction("Index","Persons");
         }
         [HttpGet]
         [Route("[action]/{personID}")]
-        public IActionResult Edit(Guid personID)
+        public async Task<IActionResult> Edit(Guid personID)
         {
-            PersonResponse? personResponse = _personsService.GetPersonByPersonID(personID);
+            PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personID);
             if (personResponse == null)
             {
                 return RedirectToAction("Index");
@@ -92,7 +92,7 @@ namespace Contacts.Controllers
 
             PersonUpdateRequest personUpdateRequest = personResponse.ToPersonUpdateRequest();
 
-            List<CountryResponse> countries = _countriesService.GetAllCountries();
+            List<CountryResponse> countries = await _countriesService.GetAllCountries();
             ViewBag.Countries = countries.Select(country =>
             new SelectListItem()
             {
@@ -106,9 +106,9 @@ namespace Contacts.Controllers
 
         [HttpPost]
         [Route("[action]/{personID}")]
-        public IActionResult Edit(PersonUpdateRequest personUpdateRequest)
+        public async Task<IActionResult> Edit(PersonUpdateRequest personUpdateRequest)
         {
-            PersonResponse? existingPerson = _personsService.GetPersonByPersonID(personUpdateRequest.PersonID);
+            PersonResponse? existingPerson = await _personsService.GetPersonByPersonID(personUpdateRequest.PersonID);
 
             if (existingPerson == null)
             {
@@ -117,12 +117,12 @@ namespace Contacts.Controllers
 
             if(ModelState.IsValid)
             {
-                PersonResponse updatedperson = _personsService.UpdatePerson(personUpdateRequest);
+                PersonResponse updatedperson = await _personsService.UpdatePerson(personUpdateRequest);
                 return RedirectToAction("Index");
             }
             else
             {
-                List<CountryResponse> countries = _countriesService.GetAllCountries();
+                List<CountryResponse> countries = await _countriesService.GetAllCountries();
                 ViewBag.Countries = countries.Select(country =>
                 new SelectListItem()
                 {
@@ -138,9 +138,9 @@ namespace Contacts.Controllers
 
         [HttpGet]
         [Route("[action]/{personID}")]
-        public IActionResult Delete(Guid? personID)
+        public async Task<IActionResult> Delete(Guid? personID)
         {
-            PersonResponse? personResponse = _personsService.GetPersonByPersonID(personID);
+            PersonResponse? personResponse = await _personsService.GetPersonByPersonID(personID);
 
             if (personResponse == null)
             {
@@ -152,16 +152,17 @@ namespace Contacts.Controllers
 
         [HttpPost]
         [Route("[action]/{personID}")]
-        public IActionResult Delete(PersonUpdateRequest personUpdateRequest)
+        public async Task<IActionResult> Delete(PersonUpdateRequest personUpdateRequest)
         {
-            PersonResponse? personResponse= _personsService.GetPersonByPersonID(personUpdateRequest.PersonID);
+            PersonResponse? personResponse= await _personsService.GetPersonByPersonID(personUpdateRequest.PersonID);
 
             if (personResponse == null)
             {
                 return RedirectToAction("Index");
             }
 
-            _personsService.DeletePerson(personUpdateRequest.PersonID);
+            await _personsService.DeletePerson(personUpdateRequest.PersonID);
+
             return RedirectToAction("Index");
         }
     }

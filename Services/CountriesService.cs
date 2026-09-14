@@ -1,4 +1,5 @@
 ﻿using Entities;
+using Microsoft.EntityFrameworkCore;
 using ServiceContracts;
 using ServiceContracts.DTO;
 
@@ -6,67 +7,56 @@ namespace Services
 {
     public class CountriesService : ICountriesService
     {
-        private readonly List<Country> _countries;
+        private readonly PersonsDbContext _db;
 
-        public CountriesService(bool initialize = true)
+        public CountriesService(PersonsDbContext db)
         {
-            _countries = new List<Country>();
-
-            //mock data
-            if (initialize)
-            {
-                _countries.AddRange(new List<Country>() {
-        new Country() { CountryID = Guid.Parse("000C76EB-62E9-4465-96D1-2C41FDB64C3B"), CountryName = "USA" },
-        new Country() { CountryID = Guid.Parse("32DA506B-3EBA-48A4-BD86-5F93A2E19E3F"), CountryName = "Canada" },
-        new Country() { CountryID = Guid.Parse("DF7C89CE-3341-4246-84AE-E01AB7BA476E"), CountryName = "UK" },
-        new Country() { CountryID = Guid.Parse("15889048-AF93-412C-B8F3-22103E943A6D"), CountryName = "India" },
-        new Country() { CountryID = Guid.Parse("80DF255C-EFE7-49E5-A7F9-C35D7C701CAB"), CountryName = "Australia" }
-        });
-            }
-
+            _db = db;
         }
 
-        public CountryResponse AddCountry(CountryAddRequest? countryAddRequest)
+        public async Task<CountryResponse> AddCountry(CountryAddRequest? countryAddRequest)
         {
+            //Validation: countryAddRequest parameter can't be null
             if (countryAddRequest == null)
             {
-                throw new ArgumentNullException(nameof(countryAddRequest), "CountryAddRequest cannot be null.");
+                throw new ArgumentNullException(nameof(countryAddRequest));
             }
 
-            if (string.IsNullOrWhiteSpace(countryAddRequest.CountryName))
+            //Validation: CountryName can't be null
+            if (countryAddRequest.CountryName == null)
             {
-                throw new ArgumentException("Country name cannot be null or empty.", nameof(countryAddRequest.CountryName));
+                throw new ArgumentException(nameof(countryAddRequest.CountryName));
             }
 
-            var existingCountry = _countries.FirstOrDefault(c => c.CountryName.Equals(countryAddRequest.CountryName, StringComparison.OrdinalIgnoreCase));
-
-            if (existingCountry != null)
+            //Validation: CountryName can't be duplicate
+            if (await _db.Countries.CountAsync(temp => temp.CountryName == countryAddRequest.CountryName) > 0)
             {
-                throw new ArgumentException("Country with the same name already exists.", nameof(countryAddRequest.CountryName));
+                throw new ArgumentException("Given country name already exists");
             }
 
-
+            //Convert object from CountryAddRequest to Country type
             Country country = countryAddRequest.ToCountry();
-            country.CountryID = Guid.NewGuid();
 
-            _countries.Add(country);
+            country.CountryID = Guid.NewGuid();
+            _db.Countries.Add(country);
+            await _db.SaveChangesAsync();
 
             return country.ToCountryResponse();
         }
 
-        public List<CountryResponse> GetAllCountries()
+        public async Task<List<CountryResponse>> GetAllCountries()
         {
-            return _countries.Select(c => c.ToCountryResponse()).ToList();
+            return await _db.Countries.Select(c => c.ToCountryResponse()).ToListAsync();
         }
 
-        public CountryResponse? GetCountryByID(Guid? countryID)
+        public async Task<CountryResponse?> GetCountryByID(Guid? countryID)
         {
            if(countryID == null)
             {
                 return null;
             }
 
-            Country? country = _countries.FirstOrDefault(c => c.CountryID == countryID);
+            Country? country =await _db.Countries.FirstOrDefaultAsync(c => c.CountryID == countryID);
 
             if (country == null)            
                 return null;
