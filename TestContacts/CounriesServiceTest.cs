@@ -3,6 +3,7 @@ using ServiceContracts.DTO;
 using Services;
 using Entities;
 using Microsoft.EntityFrameworkCore;
+using EntityFrameworkCoreMock;
 
 namespace TestContacts
 {
@@ -12,7 +13,15 @@ namespace TestContacts
 
         public CounriesServiceTest()
         {
-            _countriesService = new CountriesService(new PersonsDbContext(new DbContextOptionsBuilder<PersonsDbContext>().Options));
+            var countriesInitialData = new List<Country>() { };
+
+            DbContextMock<ApplicationDbContext> dbContextMock =
+                new DbContextMock<ApplicationDbContext>(new DbContextOptionsBuilder<ApplicationDbContext>().Options);
+
+            ApplicationDbContext dbContext = dbContextMock.Object;
+            dbContextMock.CreateDbSetMock(x => x.Countries, countriesInitialData);
+
+            _countriesService = new CountriesService(dbContext);
         }
 
 
