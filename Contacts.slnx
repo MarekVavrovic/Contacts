@@ -1,6 +1,8 @@
 <Solution>
   <Project Path="Contacts/Contacts.csproj" />
   <Project Path="Entities/Entities.csproj" />
+  <Project Path="Repositories/Repositories.csproj" Id="94062fbd-d990-4c8f-b747-0ae8c71e4d1b" />
+  <Project Path="RepositoryContracts/RepositoryContracts.csproj" Id="0b415b95-d2f5-4e70-8260-9bcdf023dd5e" />
   <Project Path="ServiceContracts/ServiceContracts.csproj" />
   <Project Path="Services/Services.csproj" />
   <Project Path="TestContacts/TestContacts.csproj" />
