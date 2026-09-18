@@ -30,3 +30,6 @@ app.UseRouting();
 app.MapControllers();
 
 app.Run();
+
+//for integration test
+public partial class Program { }
