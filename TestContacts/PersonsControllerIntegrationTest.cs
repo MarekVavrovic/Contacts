@@ -1,9 +1,6 @@
 ﻿using Fizzler.Systems.HtmlAgilityPack;
 using FluentAssertions;
 using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace TestContacts
 {

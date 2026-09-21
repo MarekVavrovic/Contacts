@@ -18,8 +18,12 @@ namespace TestContacts
     {
         private readonly IFixture _fixture;
 
+        private readonly IPersonsGetterService _personsGetterService;
+        private readonly IPersonsAdderService _personsAdderService;
+        private readonly IPersonsUpdaterService _personsUpdaterService;
+        private readonly IPersonsDeleterService _personsDeleterService;
+        private readonly IPersonsSorterService _personsSorterService;
 
-        private readonly IPersonsService _personsService;        
         private readonly Mock<IPersonsRepository> _personRepositoryMock;
         private readonly IPersonsRepository _personsRepository;
        
@@ -28,8 +32,17 @@ namespace TestContacts
             _fixture = new Fixture();
 
             _personRepositoryMock = new Mock<IPersonsRepository>();
-            _personsRepository = _personRepositoryMock.Object;        
-            _personsService = new PersonsService(_personsRepository);
+            _personsRepository = _personRepositoryMock.Object;
+
+            _personsGetterService = new PersonsGetterService(_personsRepository);
+
+            _personsAdderService = new PersonsAdderService(_personsRepository);
+
+            _personsDeleterService = new PersonsDeleterService(_personsRepository);
+
+            _personsSorterService = new PersonsSorterService(_personsRepository);
+
+            _personsUpdaterService = new PersonsUpdaterService(_personsRepository);
         }
 
         #region AddPerson method tests
@@ -42,7 +55,7 @@ namespace TestContacts
             // Act 
             Func<Task> action = async () =>
             {
-                await _personsService.AddPerson(request);
+                await _personsAdderService.AddPerson(request);
             };
 
             //Assert
@@ -69,7 +82,7 @@ namespace TestContacts
             //Act
             Func<Task> func = async () =>
             {
-                await _personsService.AddPerson(personAddRequest);
+                await _personsAdderService.AddPerson(personAddRequest);
             };
 
             //Assert
@@ -94,7 +107,7 @@ namespace TestContacts
              .ReturnsAsync(person);
 
             //Act
-            PersonResponse person_response_from_add = await _personsService.AddPerson(personAddRequest);
+            PersonResponse person_response_from_add = await _personsAdderService.AddPerson(personAddRequest);
 
             person_response_expected.PersonID = person_response_from_add.PersonID;
 
@@ -115,7 +128,7 @@ namespace TestContacts
             // Arrange
             Guid? personID = null;
             // Act
-            PersonResponse? response = await _personsService.GetPersonByPersonID(personID);
+            PersonResponse? response = await _personsGetterService.GetPersonByPersonID(personID);
             // Assert
             response.Should().BeNull();
         }
@@ -135,7 +148,7 @@ namespace TestContacts
              .ReturnsAsync(person);
 
             //Act
-            PersonResponse? person_response_from_get = await _personsService.GetPersonByPersonID(person.PersonID);
+            PersonResponse? person_response_from_get = await _personsGetterService.GetPersonByPersonID(person.PersonID);
 
             //Assert
             person_response_from_get.Should().Be(person_response_expected);
@@ -154,7 +167,7 @@ namespace TestContacts
             _personRepositoryMock.Setup(temp => temp.GetAllPersons()).ReturnsAsync(persons);
 
             //Act
-            List<PersonResponse> response = await _personsService.GetAllPersons();
+            List<PersonResponse> response = await _personsGetterService.GetAllPersons();
 
             //Assert
             response.Should().BeEmpty();
@@ -188,7 +201,7 @@ namespace TestContacts
             _personRepositoryMock.Setup(temp => temp.GetAllPersons()).ReturnsAsync(persons);
 
             //Act
-            List<PersonResponse> persons_list_from_get = await _personsService.GetAllPersons();
+            List<PersonResponse> persons_list_from_get = await _personsGetterService.GetAllPersons();
 
             //Assert
             persons_list_from_get.Should().BeEquivalentTo(response_expected);
@@ -227,7 +240,7 @@ namespace TestContacts
              .ReturnsAsync(persons);
 
             //Act
-            List<PersonResponse> persons_list_from_search = await _personsService.GetFilteredPersons(nameof(Person.PersonName), "");
+            List<PersonResponse> persons_list_from_search = await _personsGetterService.GetFilteredPersons(nameof(Person.PersonName), "");
 
             //Assert
             persons_list_from_search.Should().BeEquivalentTo(response_expected);
@@ -261,7 +274,7 @@ namespace TestContacts
             _personRepositoryMock.Setup(temp => temp.GetFilteredPersons(It.IsAny<Expression<Func<Person, bool>>>())).ReturnsAsync(persons);
 
             //Act
-            List<PersonResponse> persons_list_from_search = await _personsService.GetFilteredPersons(nameof(Person.PersonName), "sa");
+            List<PersonResponse> persons_list_from_search = await _personsGetterService.GetFilteredPersons(nameof(Person.PersonName), "sa");
 
             //Assert
             persons_list_from_search.Should().BeEquivalentTo(person_response_list_expected);
@@ -298,10 +311,10 @@ namespace TestContacts
 
             _personRepositoryMock.Setup(temp => temp.GetAllPersons()).ReturnsAsync(persons);
             
-            List<PersonResponse> allPersons = await _personsService.GetAllPersons();
+            List<PersonResponse> allPersons = await _personsGetterService.GetAllPersons();
 
             //Act
-            List<PersonResponse> persons_list_from_sort = await _personsService.GetSortedPersons(allPersons, nameof(Person.PersonName), SortOrderOptions.DESC);
+            List<PersonResponse> persons_list_from_sort = await _personsSorterService.GetSortedPersons(allPersons, nameof(Person.PersonName), SortOrderOptions.DESC);
            
             //Assert
             persons_list_from_sort.Should().BeInDescendingOrder(temp => temp.PersonName);
@@ -321,7 +334,7 @@ namespace TestContacts
             //Act
             Func<Task> action = async () =>
             {
-                await _personsService.UpdatePerson(person_update_request);
+                await _personsUpdaterService.UpdatePerson(person_update_request);
             };
 
             //Assert
@@ -339,7 +352,7 @@ namespace TestContacts
             //Act
             Func<Task> action = async () =>
             {
-                await _personsService.UpdatePerson(person_update_request);
+                await _personsUpdaterService.UpdatePerson(person_update_request);
             };
 
             //Assert
@@ -366,7 +379,7 @@ namespace TestContacts
             //Act
             var action = async () =>
             {
-                await _personsService.UpdatePerson(person_update_request);
+                await _personsUpdaterService.UpdatePerson(person_update_request);
             };
 
             //Assert
@@ -393,7 +406,7 @@ namespace TestContacts
             _personRepositoryMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(person);
 
             //Act
-            PersonResponse person_response_from_update = await _personsService.UpdatePerson(person_update_request);
+            PersonResponse person_response_from_update = await _personsUpdaterService.UpdatePerson(person_update_request);
 
             //Assert
             person_response_from_update.Should().Be(person_response_expected);
@@ -420,7 +433,7 @@ namespace TestContacts
             _personRepositoryMock.Setup(temp => temp.GetPersonByPersonID(It.IsAny<Guid>())).ReturnsAsync(person);
 
             //Act
-            bool isDeleted = await _personsService.DeletePerson(person.PersonID);
+            bool isDeleted = await _personsDeleterService.DeletePerson(person.PersonID);
 
             //Assert
             isDeleted.Should().BeTrue();
@@ -432,7 +445,7 @@ namespace TestContacts
         public async Task DeletePerson_InvalidPersonID()
         {
             //Act
-            bool isDeleted = await _personsService.DeletePerson(Guid.NewGuid());
+            bool isDeleted = await _personsDeleterService.DeletePerson(Guid.NewGuid());
 
             //Assert
             isDeleted.Should().BeFalse();

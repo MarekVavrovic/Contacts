@@ -1,3 +1,4 @@
+using Contacts.Middleware;
 using Entities;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
@@ -6,12 +7,19 @@ using ServiceContracts;
 using Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddControllersWithViews();
 
+//add services into IoC container
 builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
 builder.Services.AddScoped<IPersonsRepository, PersonsRepository>();
 
-builder.Services.AddScoped<IPersonsService, PersonsService>();
+builder.Services.AddScoped<IPersonsGetterService, PersonsGetterService>();
+builder.Services.AddScoped<IPersonsAdderService, PersonsAdderService>();
+builder.Services.AddScoped<IPersonsDeleterService, PersonsDeleterService>();
+builder.Services.AddScoped<IPersonsUpdaterService, PersonsUpdaterService>();
+builder.Services.AddScoped<IPersonsSorterService, PersonsSorterService>();
+
 builder.Services.AddScoped<ICountriesService, CountriesService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -20,9 +28,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 
 var app = builder.Build();
 
-if(builder.Environment.IsDevelopment())
+
+if (builder.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+} else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandlingMiddleware();
 }
 
 app.UseStaticFiles();
